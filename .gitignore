@@ -1,6 +1,8 @@
 ## Own
 _old/*
 
+lib/*
+
 **/__pycache__/
 
 
