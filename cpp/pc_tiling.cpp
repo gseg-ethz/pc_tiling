@@ -6,6 +6,7 @@
 #include <pcl/io/ply_io.h>
 #include <omp.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 //#include <boost/program_options.hpp>
@@ -240,21 +241,28 @@ void split_point_clouds_into_tiles(pcl::PointCloud<pcl::PointXYZ>::Ptr cloudOne,
 									float overlap,
 									std::string saveFilePrefix)
 {
-	// Estimate how many splits will have to be performed minimaly (add one as division yields floor)
+	// Estimate how many splits will have to be performed minimally (add one as division yields floor)
 	int numberPoints = std::max(cloudOne->size(), cloudTwo->size());
 	int minNumberOfTiles = numberPoints / maxPointsPerTile + 1;
+
 
 	if (minNumberOfTiles == 1) 
 	{
 		// Ignore tiles with fewer than 1000 pts
 		if (std::min(cloudOne->size(), cloudTwo->size()) > 1000){
 
-		pcl::PLYWriter writer;
-		writer.write(saveFilePrefix + "/tiled_data/source_tile_" + std::to_string(tileCounter) + ".ply", *cloudOne, true, false);
-		writer.write(saveFilePrefix + "/tiled_data/target_tile_" + std::to_string(tileCounter) + ".ply", *cloudTwo, true, false);
+		// Pad number
+		std::stringstream ss;
 
-		writer.write(saveFilePrefix + "/tiled_data/overlap/source_tile_" + std::to_string(tileCounter) + "_overlap.ply", *cloudOneOverlap, true, false);
-		writer.write(saveFilePrefix + "/tiled_data/overlap/target_tile_" + std::to_string(tileCounter) + "_overlap.ply", *cloudTwoOverlap, true, false);
+		ss << std::setw(3) << std::setfill('0') << tileCounter;
+		std::string paddedTileCounter = ss.str();
+
+		pcl::PLYWriter writer;
+		writer.write(saveFilePrefix + "/source_tile_" + paddedTileCounter + ".ply", *cloudOne, true, false);
+		writer.write(saveFilePrefix + "/target_tile_" + paddedTileCounter + ".ply", *cloudTwo, true, false);
+
+		writer.write(saveFilePrefix + "/overlap/source_tile_" + paddedTileCounter + "_overlap.ply", *cloudOneOverlap, true, false);
+		writer.write(saveFilePrefix + "/overlap/target_tile_" + paddedTileCounter + "_overlap.ply", *cloudTwoOverlap, true, false);
 
 		tileCounter++;
 		}
@@ -700,6 +708,7 @@ bool resave_point_cloud(std::string firstPointCloud,
 
 bool tile_point_clouds(std::string firstPointCloud, 
 					   std::string secondPointCloud,
+					   std::string resultsPath,
 					   int maxPointsPerTile, 
 					   int minPointsPerTile,
 					   bool voxelGridFlag,
@@ -742,13 +751,17 @@ bool tile_point_clouds(std::string firstPointCloud,
 		std::cout <<"ERROR:" << "File " << secondPointCloud << " does not exist!!!" << std::endl;
 		return false;
 	}
-	
-	// Extract the folder path for saving the data
-	std::size_t found = firstPointCloud.find_last_of("/\\");
-	std::string tempFileName = firstPointCloud.substr(0, found);
-	found = tempFileName.find_last_of("/\\");
-	std::string saveFilePrefix = tempFileName.substr(0, found);
 
+	std::string saveFilePrefix;
+	if (resultsPath.empty()) {
+        // Extract the folder path for saving the data
+        std::size_t found = firstPointCloud.find_last_of("/\\");
+        std::string tempFileName = firstPointCloud.substr(0, found);
+        found = tempFileName.find_last_of("/\\");
+        saveFilePrefix = tempFileName.substr(0, found) + "/tiled_data/";
+    } else {
+        saveFilePrefix = resultsPath;
+    }
 
 	// Get the bounding box of the first point cloud
 	pcl::PointXYZ minPtCloud1, maxPtCloud1;
@@ -775,10 +788,10 @@ bool tile_point_clouds(std::string firstPointCloud,
 	}
 
 	// Create folder for saving data
-	boost::filesystem::path dstFolder = saveFilePrefix + "/tiled_data/";
-	boost::filesystem::create_directory(dstFolder);
+	boost::filesystem::path dstFolder = resultsPath;
+	boost::filesystem::create_directories(dstFolder);
 
-	boost::filesystem::path dstFolder_overlap = saveFilePrefix + "/tiled_data/overlap/";
+	boost::filesystem::path dstFolder_overlap = resultsPath + "/overlap/";
 	boost::filesystem::create_directory(dstFolder_overlap);
 
 	// Filter the point clouds using a voxel grid filter in order to make the resolution more uniform
@@ -827,6 +840,7 @@ bool tile_point_clouds(std::string firstPointCloud,
 	std::cout << "More then " << minNumberOfTiles << " patches per epoch will be generated." << std::endl;
 	std::vector<std::string> projection = { "X","Y","Z" };
 	std::cout << "Point clouds will be projected along the " << projection[projectionDirection] << " axis." << std::endl;
+	std::cout << "Results will be saved in: " << saveFilePrefix << std::endl;
 	}
 	
 	int tileCounter = 0;

@@ -5,6 +5,7 @@
 
 bool tile_point_clouds(std::string firstPointCloud,
 					   std::string secondPointCloud,
+					   std::string resultsPath,
 					   int maxPointsPerTile,
 					   int minPointsPerTile,
 					   bool voxelGridFlag,
