@@ -1,43 +1,128 @@
-Point cloud tiling tool enables the tiling of two registered point clouds (two epochs) into smaller tiles that can be processed on a standalone computer. The current bottleneck of the approach are the input parametrization and the nearest neighbor search. Tiling of the point clouds is performed in 2D after projecting the point clouds along one of the axis. Each tile is subdivided into two subtiles along a larger dimensions (width or hight) until the conditions (max and min number of points) are satisfied. More information is available in **cite the landslides paper**. 
+# PC Tiling
 
-<pre><code>
+PC Tiling is a high-performance point cloud processing library implemented in C++ and made available to Python using 
+SWIG. It leverages the [Point Cloud Library (PCL)](https://pointclouds.org/) for robust point cloud segmentation, 
+filtering, and tiling. This package enables you to easily split large point cloud datasets into smaller, manageable 
+tiles and apply voxel grid filtering to standardize resolution.
 
-<i>class</i> <b>pc_tiling.resave_point_cloud(firstPointCloud, secondPointCloud, verbose=False)</b>
+## Features
 
-<b>Parameters:</b> 
+- **Point Cloud Tiling:** Automatically splits point clouds into tiles based on spatial boundaries.
+- **Voxel Grid Filtering:** Uniformly down-samples point clouds to improve computational performance.
+- **Resaving Functionality:** Offers functions to load and resave PLY-formatted point clouds.
+- **PCL Integration:** Utilizes PCL’s efficient segmentation, filtering, and feature estimation techniques.
+- **Parallel Processing:** Supports parallel computation using OpenMP for faster performance.
 
-- <i>firstPointCloud (string):</i> path to the ".ply" file of the source epoch
+## Requirements
 
-- <i>secondPointCloud (string):</i> path to the ".ply" file of the target epoch
+- **Python:** Python 3.11
+- **C++ Compiler:** Must support C++17
+- **CMake:** Version 3.10 or higher
+- **SWIG:** Version 3.0 or higher (for Python binding generation)
+- **PCL:** Point Cloud Library, version 1.8 or higher
+- **Boost:** Including the filesystem component
+- **OpenMP:** Available with your C++ compiler (optional but recommended)
 
-- <i>verbose (bool):</i> if selected detailed information will be written to the command line 
+## Installation
 
+### Prerequisites
 
+Ensure you have the following dependencies installed:
 
-<i>class</i> <b>pc_tiling.tile_point_clouds(firstPointCloud, secondPointCloud, maxPointsPerTile = 1000000, minPointsPerTile = 100, voxelGridFlag = false, voxelGridFilterSize = 0.05, overlapTiles = 0.0, projectionDirection = -1, verbose=False)</b>
+- **CMake:**  
+  See [cmake.org](https://cmake.org/download/) for download instructions.
+- **SWIG:**  
+  On Ubuntu, install with:  
+  ```bash
+  sudo apt-get install swig
+  ```
+- **PCL:**  
+  Follow the [official PCL installation guide](https://pointclouds.org/downloads/) for your platform.
+- **Boost:**  
+  On Ubuntu:  
+  ```bash
+  sudo apt-get install libboost-all-dev
+  ```
+- **Python Development Headers:**  
+  On Ubuntu:  
+  ```bash
+  sudo apt-get install python3-dev
+  ```
 
-<b>Parameters:</b> 
+### Building and Installing
 
-- <i>firstPointCloud (string):</i> path to the ".ply" file of the source epoch
+The installation process will automatically build the shared library and generate the SWIG bindings. Simply run:
 
-- <i>secondPointCloud (string):</i> path to the ".ply" file of the target epoch
+```bash
+pip install .
+```
 
-- <i>maxPointsPerTile (int):</i> maximum number of points per tile (~10^6 point can be processed on 64GB of RAM)
+This command will:
+- Build the C++ shared library using CMake (placing it in the `lib` folder).
+- Generate the SWIG wrapper (`pc_tiling_wrap.cxx`).
+- Place all components in the proper locations for Python to import the module.
 
-- <i>minPointsPerTile (int):</i> minimum number of points per tile (if less points the point cloud tile will not be saved)
+## Usage
 
-- <i>voxelGridFlag (bool):</i> flag for voxel grid filtering (uniforming the point cloud resolution)
+After installation, you can import the module in your Python projects. Here’s a simple example that demonstrates how to 
+use the tiling functionality:
 
-- <i>voxelGridFilterSize (float):</i> if voxelGridFlag=True defines the size of the voxel grid filter (if =0.0, median point cloud resolution will be calculated and used as the filter size)
+```python
+import pc_tiling
 
-- <i>overlapTiles (float):</i> defines the intra-epochal overlap of the neighboring tiles
+# Define the input point cloud files (PLY format)
+first_cloud_path = 'path/to/first/point_cloud.ply'
+second_cloud_path = 'path/to/second/point_cloud.ply'
 
-- <i>projectionDirection (float):</i> axis along which the point cloud will be projected (0=X, 1=Y, 2=Z, -1=axis with the largest projection area)
+# Define the directory to save the tiling results
+results_dir = 'path/to/save/results'
 
-- <i>verbose (bool):</i> if selected detailed information will be written to the command line 
+# Tiling configuration parameters
+max_points = 100000        # Maximum number of points per tile
+min_points = 1000          # Minimum number of points per tile
+voxel_flag = True          # Enable voxel grid filtering
+voxel_size = 0.05          # Size of the voxel grid filter (in meters)
+overlap = 20.0             # Overlap size for tiling (in meters)
+projection_axis = -1       # Set to -1 to auto-select axis based on overlap 
+verbose = True             # Enable verbose logging
 
-<b>Returns:</b>
+# Perform the tiling operation
+if pc_tiling.tile_point_clouds(first_cloud_path, second_cloud_path, results_dir,
+                               max_points, min_points, voxel_flag, voxel_size,
+                               overlap, projection_axis, verbose):
+    print("Tiling completed successfully!")
+else:
+    print("An error occurred during tiling.")
+```
 
-- Function saves point of each tile into a separate "*.ply" file, such that the tile "source_tile_x.ply" corresponds to the "target_tile_x.ply", where "x" is the number of the tile.
+## API Overview
 
-</code></pre>
+The main functions available in the module are:
+
+- **`tile_point_clouds(...)`**  
+  Splits point clouds into tiled patches based on the specified parameters.  
+  *Parameters include*:  
+  - `firstPointCloud`: Path to the first point cloud file.
+  - `secondPointCloud`: Path to the second point cloud file.
+  - `resultsPath`: Directory where tiled outputs will be saved.
+  - `maxPointsPerTile`: Maximum allowed points per tile.
+  - `minPointsPerTile`: Minimum required points per tile.
+  - `voxelGridFlag`: A boolean flag to enable voxel grid filtering.
+  - `voxelGridFilterSize`: The voxel grid filter size.
+  - `overlapTiles`: The amount of overlap between tiles.
+  - `projectionDirection`: Axis for projecting the point clouds (0 for X, 1 for Y, 2 for Z, or -1 for automatic selection).
+  - `verbose`: Enable or disable verbose output.
+
+- **`resave_point_cloud(...)`**  
+  Resaves the input point cloud files (PLY format) after reading them.
+
+## License
+
+This project is licensed under the [Your License Name] license. See the LICENSE file for more details.
+
+## Contributing and Support
+
+If you have any issues or suggestions, please feel free to submit an issue or a pull request in the repository.
+
+For questions, please contact the project maintainers.
+```
