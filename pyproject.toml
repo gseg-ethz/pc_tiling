@@ -1,55 +1,57 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "wheel", "cmake", "swig"]
-build-backend = "setuptools.build_meta"
+# scikit-build-core already bundles wheels for CMake & Ninja, so no need to list them.
+requires = [
+  "scikit-build-core>=0.11",
+  "swig>=4.3"
+]
+build-backend = "scikit_build_core.build"
+
 
 [project]
-name = "pc_tiling"
-version = "0.1.1"
-authors = [
-    {name = "Zan Gojcic"},
-    {name = "Nicholas Meyer", email = "meyernic@ethz.ch"},
-]
-maintainers = [
-    {name = "Nicholas Meyer", email = "meyernic@ethz.ch"},
-]
-description = "Description of ModuleA"
-readme = {file = "README.md", content-type = "text/markdown"}
+name            = "pc-tiling"                 # Use dashes, never underscores, on PyPI
+version         = "0.1.2"                     # Or switch to dynamic = ["version"]
+description     = "Fast point‑cloud tiling with PCL, exposed to Python via SWIG"
+readme          = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
-keywords = ["ONE", "TWO"]
-license = {file = "LICENSE"} # To be changed once released
-classifiers = [ # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#classifiers
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
 
-    "Private :: Do Not Upload" # REMOVE BEFORE FLIGHT -- PyPI will always reject packages with classifiers beginning with Private ::
+authors = [
+  { name = "Zan Gojcic" },
+  { name = "Nicholas Meyer", email = "meyernic@ethz.ch" }
+]
+# ‘maintainers’ is optional; use it only if different from authors
+maintainers = [
+  { name = "Nicholas Meyer", email = "meyernic@ethz.ch" }
 ]
 
+keywords = ["point‑cloud", "tiling", "PCL", "SWIG", "C++"]
+
+license = { file = "LICENSE" }
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: C++",
+  "Operating System :: OS Independent"
+]
+
+# Run‑time Python deps only; C/C++ libs are handled by CMake
 dependencies = [
+  # "numpy>=2.0,<3",          # uncomment if you pass NumPy arrays
 ]
-
-[tool.setuptools]
-packages = ["pc_tiling"]
-include-package-data = true
-
-[tool.setuptools.package-dir]
-pc_tiling = "src/pc_tiling"
-
 
 [project.urls]
-Homepage = "https://example.com"
-Documentation = "https://readthedocs.org"
-Repository = "https://github.com/me/spam.git"
-Issues = "https://github.com/me/spam/issues"
-Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+Homepage       = "https://github.com/me/pc-tiling"
+Documentation  = "https://readthedocs.org/projects/pc-tiling"
+Repository     = "https://github.com/me/pc-tiling"
+Issues         = "https://github.com/me/pc-tiling/issues"
+Changelog      = "https://github.com/me/pc-tiling/blob/main/CHANGELOG.md"
 
-#[project.optional-dependencies]
-#doc = ["sphinx"]
-#dev = [
-#    "black",  # Code formatter to make it consistant with PEP rules
-#    "flake8", # Code linter: Analyzes source code for errors, vulnerabilities, and stylistic issues
-#]
-#
-#[project.scripts]
-#moduleA-cli = "ModuleA.cli:main_cli"
+
+# ───────── scikit‑build‑core options ──────────────────────────────
+[tool.scikit-build]
+cmake.source-dir = "."        # <- dotted name, not hyphen
+
+

@@ -1,5 +1,5 @@
  /* pc_tiling.i */
- %module pc_tiling
+ %module(cxx) pc_tiling
 
  %{
 	#define SWIG_FILE_WITH_INIT
